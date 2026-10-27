@@ -1,0 +1,8 @@
+node_modules
+npm-debug.log
+*.log
+.claude
+data
+Designs
+Designs.zip
+.env

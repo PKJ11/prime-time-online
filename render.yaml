@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: prime-time-online
+    runtime: node
+    plan: starter            # paid; needed for the persistent disk below
+    buildCommand: npm ci --omit=dev
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_VERSION
+        value: "20"
+      - key: TRUST_PROXY
+        value: "1"
+      - key: DATA_DIR
+        value: /var/data
+      - key: ADMIN_SIGNUP_CODE
+        sync: false          # Render asks you for this value; it is not stored in GitHub
+    disk:
+      name: prime-time-data
+      mountPath: /var/data
+      sizeGB: 1

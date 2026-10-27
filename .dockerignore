@@ -1,0 +1,10 @@
+node_modules
+npm-debug.log
+*.log
+.claude
+test
+.git
+data
+Designs
+Designs.zip
+tools

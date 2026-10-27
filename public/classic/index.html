@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Prime Time Online</title>
+  <meta name="description" content="Play Logicology's Prime Time online with 2–6 players." />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='14' fill='%231c4f86'/><circle cx='32' cy='32' r='20' fill='%23f08a4b'/><text x='32' y='41' font-size='26' font-family='Arial' font-weight='bold' fill='white' text-anchor='middle'>P</text></svg>" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- ================= RECONNECTING ================= -->
+  <section id="screen-loading" class="screen loading" hidden>
+    <div class="logo big"><span class="lp">PRIME</span><span class="lt">TIME</span></div>
+    <p class="muted">Rejoining your game…</p>
+  </section>
+
+  <!-- ================= HOME ================= -->
+  <section id="screen-home" class="screen home">
+    <div class="home-card">
+      <div class="logo big"><span class="lp">PRIME<sup>™</sup></span><span class="lt">TIME</span></div>
+      <p class="tagline">The game of primes &amp; factors — now online for 2 to 6 players.</p>
+      <label class="field">
+        <span>Your name</span>
+        <input id="home-name" maxlength="16" autocomplete="nickname" placeholder="e.g. Aarav" />
+      </label>
+      <div class="home-actions">
+        <button id="btn-create" class="btn primary lg">Create a game</button>
+        <button id="btn-vs-bot" class="btn secondary lg">🤖 Play against the computer</button>
+        <div class="or"><span>or join a friend</span></div>
+        <div class="join-row">
+          <input id="home-code" maxlength="5" placeholder="CODE" autocomplete="off" spellcheck="false" />
+          <button id="btn-join" class="btn secondary lg">Join</button>
+        </div>
+      </div>
+      <p id="home-error" class="error" role="alert"></p>
+      <button class="link" data-open-rules>How to play</button>
+    </div>
+    <p class="home-foot">A Logicology game · Primes are always playable · Composites need their factors on the board</p>
+  </section>
+
+  <!-- ================= LOBBY ================= -->
+  <section id="screen-lobby" class="screen lobby" hidden>
+    <header class="topbar">
+      <div class="logo"><span class="lp">PRIME</span><span class="lt">TIME</span></div>
+      <div class="topbar-right">
+        <button class="btn ghost sm" data-open-rules>Rules</button>
+        <button class="btn ghost sm" id="btn-leave-lobby">Leave</button>
+      </div>
+    </header>
+    <div class="lobby-wrap">
+      <div class="panel invite">
+        <h2>Invite players</h2>
+        <p class="muted">Share this code or link. 2–6 players can join. Want to practise? Add a computer player 🤖 to any empty seat.</p>
+        <div class="code-big" id="lobby-code">-----</div>
+        <div class="invite-row">
+          <input id="lobby-link" readonly />
+          <button class="btn secondary" id="btn-copy">Copy link</button>
+        </div>
+      </div>
+      <div class="panel">
+        <h2>Players <span id="lobby-count" class="pill"></span></h2>
+        <ul id="lobby-players" class="lobby-players"></ul>
+        <div id="lobby-series" class="series-mini"></div>
+      </div>
+      <div class="panel">
+        <h2>Table settings</h2>
+        <label class="toggle">
+          <input type="checkbox" id="set-hints" />
+          <span><b>Show hints</b><small>Mark which cards can be played (✓) and highlight their factors on the board. Off = players work it out themselves; trying a card that doesn't fit explains what's missing.</small></span>
+        </label>
+        <label class="field inline">
+          <span><b>Games in the series</b><small>The same players play this many games (1–9). Scores add up, and the lowest total wins the series.</small></span>
+          <input type="number" id="set-series" min="1" max="9" step="1" value="1" inputmode="numeric" />
+        </label>
+        <label class="field inline">
+          <span><b>SKIP cards</b><small>How many SKIP cards go into the deck (4–10). There are always 2 MAGIC cards.</small></span>
+          <select id="set-skips">
+            <option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option>
+            <option value="8">8</option><option value="9">9</option><option value="10">10</option>
+          </select>
+        </label>
+        <label class="field inline">
+          <span><b>Turn timer</b><small>If time runs out, a card is played automatically (or the turn is passed if nothing fits).</small></span>
+          <select id="set-timer">
+            <option value="0">Off</option>
+            <option value="30">30 s</option>
+            <option value="60">60 s</option>
+            <option value="90">90 s</option>
+          </select>
+        </label>
+        <p id="settings-note" class="muted small"></p>
+        <button id="btn-start" class="btn primary lg block">Start game</button>
+        <p id="lobby-wait" class="muted center"></p>
+        <p id="lobby-error" class="error" role="alert"></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= GAME ================= -->
+  <section id="screen-game" class="screen game" hidden>
+    <header class="topbar">
+      <div class="logo"><span class="lp">PRIME</span><span class="lt">TIME</span></div>
+      <div class="turn-banner" id="turn-banner"></div>
+      <div class="topbar-right">
+        <span class="series-tag" id="series-tag" hidden></span>
+        <span class="room-tag" id="game-code"></span>
+        <button class="icon-btn" id="btn-sound" title="Sound on/off" aria-label="Toggle sound">🔊</button>
+        <button class="icon-btn" data-open-rules title="Rules" aria-label="Rules">?</button>
+        <button class="icon-btn" id="btn-leave-game" title="Leave game" aria-label="Leave game">⎋</button>
+      </div>
+    </header>
+
+    <div class="game-layout">
+      <main class="board-area">
+        <div class="players-strip" id="players-strip"></div>
+        <div class="board-frame" id="board-frame" title="Click the board to zoom">
+          <div class="board" id="board"></div>
+          <span class="zoom-hint" aria-hidden="true">🔍</span>
+        </div>
+      </main>
+
+      <aside class="side">
+        <div class="panel table-panel">
+          <div class="piles">
+            <div class="pile tray" id="tray">
+              <div class="stack"><img class="back" src="/assets/cards/back.png" alt=""><img class="back" src="/assets/cards/back.png" alt=""><img class="back" src="/assets/cards/back.png" alt=""></div>
+              <div class="pile-label"><b id="tray-count">0</b> in tray</div>
+            </div>
+          </div>
+          <ol class="seat-list" id="seat-list"></ol>
+        </div>
+        <div class="panel tabs-panel">
+          <div class="tabs" role="tablist">
+            <button class="tab active" data-tab="log" role="tab">Game log</button>
+            <button class="tab" data-tab="chat" role="tab">Chat <span id="chat-badge" class="badge" hidden></span></button>
+          </div>
+          <ol class="log" id="log" data-pane="log"></ol>
+          <div class="chat" data-pane="chat" hidden>
+            <ol id="chat-list" class="chat-list"></ol>
+            <div class="emoji-row">
+              <button data-emoji="👍">👍</button><button data-emoji="😮">😮</button><button data-emoji="😂">😂</button><button data-emoji="🎉">🎉</button><button data-emoji="😅">😅</button>
+            </div>
+            <form id="chat-form" class="chat-form">
+              <input id="chat-input" maxlength="200" placeholder="Say something…" autocomplete="off" />
+              <button class="btn secondary sm">Send</button>
+            </form>
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    <footer class="dock" id="dock">
+      <div class="dock-top">
+        <div class="status" id="status"></div>
+        <div class="dock-actions">
+          <button class="btn primary" id="btn-play" hidden>Play</button>
+          <button class="btn secondary" id="btn-pass">Pass &amp; draw</button>
+        </div>
+      </div>
+      <div class="hand" id="hand"></div>
+    </footer>
+  </section>
+
+  <!-- ================= OVERLAYS ================= -->
+  <!-- Zoomed board: the real board element is moved in here while zoomed, so it stays playable. -->
+  <div class="board-zoom" id="board-zoom" hidden>
+    <button class="zoom-close" id="btn-zoom-close" aria-label="Close zoomed board">×</button>
+  </div>
+
+  <div class="overlay" id="toss-overlay" hidden>
+    <div class="modal toss">
+      <h2>The Toss</h2>
+      <p class="muted" id="toss-sub">Everyone draws a card. Smallest number starts the game!</p>
+      <div class="toss-grid" id="toss-grid"></div>
+      <p class="toss-result" id="toss-result"></p>
+    </div>
+  </div>
+
+  <div class="overlay" id="over-overlay" hidden>
+    <div class="modal over">
+      <!-- result of the game just played -->
+      <div id="over-game">
+        <div class="trophy">🏆</div>
+        <h2 id="over-title"></h2>
+        <p class="muted" id="over-sub"></p>
+        <table class="score-table" id="over-table">
+          <thead><tr><th>Player</th><th>Cards left</th><th>Score</th><th>Series</th></tr></thead>
+          <tbody id="over-body"></tbody>
+        </table>
+        <p class="muted small">Lower score is better. Magic &amp; Skip count as 0.</p>
+      </div>
+      <!-- final standings once every game of the series has been played -->
+      <div id="over-series" hidden>
+        <div class="trophy">🏆</div>
+        <h2 id="series-title"></h2>
+        <p class="muted" id="series-sub"></p>
+        <div class="series-wrap"><table class="series-table" id="series-table"></table></div>
+        <p class="muted small">Scores from every game are added up. The lowest total wins the series; the highest total comes last.</p>
+      </div>
+      <div class="over-actions" id="over-actions"></div>
+      <button class="link" id="btn-over-toggle" hidden></button>
+      <button class="link" id="btn-view-board">View final board</button>
+    </div>
+  </div>
+
+  <div class="overlay" id="skip-overlay" hidden>
+    <div class="modal small-modal">
+      <h2>Play SKIP on…</h2>
+      <p class="muted">Pick the player who will miss their next turn.</p>
+      <div class="skip-targets" id="skip-targets"></div>
+      <button class="btn ghost block" id="btn-skip-cancel">Cancel</button>
+    </div>
+  </div>
+
+  <div class="overlay" id="nope-overlay" hidden>
+    <div class="modal small-modal nope" role="alertdialog" aria-labelledby="nope-title" aria-describedby="nope-msg">
+      <div class="nope-card" id="nope-card"></div>
+      <h2 id="nope-title">Oops!</h2>
+      <p id="nope-msg"></p>
+      <button class="btn primary lg block" id="btn-nope-ok">OK</button>
+    </div>
+  </div>
+
+  <div class="overlay" id="rules-overlay" hidden>
+    <div class="modal rules">
+      <button class="close" data-close aria-label="Close">×</button>
+      <h2>How to play Prime Time</h2>
+      <ol>
+        <li><b>The toss.</b> Everyone gets a random card (2–60). Smallest number wins the toss and becomes <b>P1</b>. Ties draw again.</li>
+        <li><b>The deal.</b> P1 gets the <b>1</b> card plus 4 random cards. Everyone else gets 5 random cards.</li>
+        <li><b>First move.</b> P1 must place the <b>1</b> on the board. Play then goes clockwise.</li>
+        <li><b>On your turn</b> place <b>one</b> card. If you have a playable card you <b>must</b> play it; you can only pass when nothing fits.
+          <ul>
+            <li>A <b>PRIME</b> can be played any time (if its slot is free).</li>
+            <li>A <b>composite</b> can be played only when all its prime factors are on the board. For example, 12 needs 2, 2 and 3.</li>
+            <li><b>MAGIC</b> is a wild card that counts as any prime you choose. It must go on an <b>empty</b> prime slot, and the real card can later go on top of it. Only when <b>every</b> prime slot is filled can MAGIC go on top of a card already on the board, where it counts as one more of that prime. So MAGIC can always be played.</li>
+            <li><b>SKIP</b> makes a player of your choice miss their next turn. They still have to draw a card from the tray.</li>
+          </ul>
+        </li>
+        <li><b>Your hand</b> shows cards in the order they arrived. New cards go on the right. Drag a card to move it (on a phone, press and hold, then drag), or select it and use the ← → keys.</li>
+        <li><b>Always draw.</b> Whether you play or pass, you must pick a card from the tray at the end of your turn (while the tray has cards).</li>
+        <li><b>Winning.</b> Once the tray is empty, the first player to get rid of all their cards wins.</li>
+        <li><b>Series.</b> The host chooses how many games the same players will play. Scores add up across the games. The lowest total wins the series, and the highest total comes last.</li>
+        <li><b>Scoring.</b> Everyone else adds up the numbers left in their hand (Magic &amp; Skip = 0). Lower is better. Scores add up across a series of games.</li>
+      </ol>
+      <p class="muted small">Players can’t leave during a game. If someone drops out, the host can remove them and their unplayed cards go back into the tray.</p>
+    </div>
+  </div>
+
+  <div class="toasts" id="toasts" aria-live="polite"></div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/rules.js"></script>
+  <script src="client.js"></script>
+</body>
+</html>

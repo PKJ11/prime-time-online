@@ -1,0 +1,369 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="theme-color" content="#134e68" />
+  <title>Prime Time</title>
+  <meta name="description" content="Play Logicology's Prime Time on a tablet with 2–6 players." />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='14' fill='%23134e68'/><circle cx='32' cy='32' r='20' fill='%23f26b3f'/><text x='32' y='41' font-size='26' font-family='Arial' font-weight='bold' fill='white' text-anchor='middle'>P</text></svg>" />
+  <!-- the fonts are served with the game (school networks often block Google Fonts) -->
+  <link rel="preload" href="assets/fonts/alfa-slab-one-latin.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="preload" href="assets/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="stylesheet" href="app.css" />
+</head>
+<body>
+<!-- Everything is laid out on a 1024-wide tablet "stage" (the size of the designs) and scaled to fit the screen. -->
+<div id="stage">
+  <div class="decor" id="decor" aria-hidden="true">
+    <img class="decor-top" id="decor-top" alt="" />
+    <img class="decor-bottom" id="decor-bottom" alt="" />
+  </div>
+
+  <!-- ================= CONNECTING ================= -->
+  <section class="screen" id="scr-loading" data-decor="login">
+    <img class="logo" src="assets/ui/logo.png" alt="Prime Time" />
+    <p class="loading-msg">Connecting…</p>
+  </section>
+
+  <!-- ================= FIRST SCREEN: who is playing? ================= -->
+  <section class="screen" id="scr-choose" data-decor="login" hidden>
+    <img class="logo" src="assets/ui/logo.png" alt="Prime Time" />
+    <div class="sheet sheet-login">
+      <h1 class="title">Who is playing?</h1>
+      <button class="choice" data-mode="individual"><b>Me and my friends</b><span>Play at home with friends or the computer.</span></button>
+      <button class="choice school" data-mode="school"><b>My class</b><span>Join your class game with a code. Teachers start games here.</span></button>
+    </div>
+  </section>
+
+  <!-- ================= INDIVIDUAL: create a game, play the computer, or join a friend ================= -->
+  <section class="screen" id="scr-individual" data-decor="login" hidden>
+    <img class="logo" src="assets/ui/logo.png" alt="Prime Time" />
+    <form class="sheet sheet-login" id="form-individual" autocomplete="off" novalidate>
+      <button class="back" type="button" data-go="choose" aria-label="Back"></button>
+      <h1 class="title">Me and my friends</h1>
+      <input class="field" id="ind-name" maxlength="16" aria-label="Your name" placeholder="Your name" autocomplete="nickname" />
+      <p class="form-error" id="ind-error" role="alert"></p>
+      <button class="btn" type="button" id="btn-create">Create a game</button>
+      <button class="btn secondary" type="button" id="btn-vs-bot">Play against the computer</button>
+      <div class="or"><span>or join a friend</span></div>
+      <div class="join-row">
+        <input class="field" id="ind-code" maxlength="6" aria-label="Game code" placeholder="Game code" autocapitalize="characters" spellcheck="false" />
+        <button class="btn secondary" type="submit" id="btn-join">Join</button>
+      </div>
+    </form>
+  </section>
+
+  <!-- ================= USER LOGIN (school) ================= -->
+  <section class="screen" id="scr-login" data-decor="login" hidden>
+    <img class="logo" src="assets/ui/logo.png" alt="Prime Time" />
+    <form class="sheet sheet-login" id="form-login" autocomplete="off" novalidate>
+      <button class="back" type="button" data-go="choose" aria-label="Back"></button>
+      <h1 class="title">Join your class</h1>
+      <input class="field" id="in-name" maxlength="16" aria-label="Name" placeholder="Name" autocomplete="nickname" />
+      <label class="field select"><span class="sr">Grade</span>
+        <select id="in-grade" required><option value="" disabled selected>Grade</option></select>
+      </label>
+      <input class="field" id="in-code" maxlength="6" aria-label="Game code" placeholder="Game code" inputmode="numeric" spellcheck="false" />
+      <p class="form-error" id="login-error" role="alert"></p>
+      <button class="btn" type="submit">Enter</button>
+      <button class="link" type="button" data-go="admin-login">Teacher? Log in here</button>
+    </form>
+  </section>
+
+  <!-- ================= ADMIN LOGIN ================= -->
+  <section class="screen" id="scr-admin-login" data-decor="login" hidden>
+    <img class="logo" src="assets/ui/logo.png" alt="Prime Time" />
+    <form class="sheet sheet-login" id="form-admin-login" novalidate>
+      <button class="back" type="button" data-go="login" aria-label="Back"></button>
+      <h1 class="title">Admin Login</h1>
+      <input class="field" id="al-email" type="email" aria-label="Email" placeholder="Email" autocomplete="username" autocapitalize="off" />
+      <div class="field-wrap">
+        <input class="field" id="al-pass" type="password" aria-label="Password" placeholder="Password" autocomplete="current-password" />
+        <button class="eye" type="button" data-eye="al-pass" aria-label="Show password"></button>
+      </div>
+      <p class="form-error" id="al-error" role="alert"></p>
+      <button class="btn" type="submit">Login</button>
+      <button class="link" type="button" id="btn-forgot">Forgot password?</button>
+      <div class="link-row">
+        <button class="link" type="button" data-go="login">Student login</button>
+        <button class="link" type="button" data-go="admin-signup">Sign up as admin</button>
+      </div>
+    </form>
+  </section>
+
+  <!-- ================= ADMIN SIGN-UP ================= -->
+  <section class="screen" id="scr-admin-signup" data-decor="admin" hidden>
+    <img class="logo" src="assets/ui/logo.png" alt="Prime Time" />
+    <form class="sheet sheet-admin" id="form-signup" novalidate>
+      <button class="back" type="button" data-go="admin-login" aria-label="Back"></button>
+      <h1 class="title">Admin Registration</h1>
+      <!-- shown only when the site has a sign-up code (ADMIN_SIGNUP_CODE on the server) -->
+      <input class="field" id="su-code" aria-label="Sign-up code" placeholder="Sign-up code" maxlength="64" autocomplete="off" spellcheck="false" hidden />
+      <input class="field" id="su-email" type="email" aria-label="Email" placeholder="Email" autocomplete="username" autocapitalize="off" />
+      <div class="field-wrap">
+        <input class="field" id="su-pass" type="password" aria-label="Create password" placeholder="Create password" autocomplete="new-password" maxlength="64" />
+        <small class="field-note">6 or more, with a number</small>
+      </div>
+      <input class="field" id="su-pass2" type="password" aria-label="Re-enter password" placeholder="Re-enter password" autocomplete="new-password" maxlength="64" />
+      <input class="field" id="su-school" aria-label="School" placeholder="School" maxlength="80" />
+      <input class="field" id="su-campus" aria-label="Campus" placeholder="Campus" maxlength="80" />
+      <p class="form-error" id="su-error" role="alert"></p>
+      <button class="btn" type="submit">Register</button>
+      <button class="link" type="button" data-go="admin-login">Already registered? Log in</button>
+    </form>
+  </section>
+
+  <!-- ================= NEW PASSWORD (from the reset email) ================= -->
+  <section class="screen" id="scr-reset" data-decor="login" hidden>
+    <img class="logo" src="assets/ui/logo.png" alt="Prime Time" />
+    <form class="sheet sheet-login" id="form-reset" novalidate>
+      <h1 class="title">New password</h1>
+      <div class="field-wrap">
+        <input class="field" id="rs-pass" type="password" aria-label="New password" placeholder="New password" autocomplete="new-password" maxlength="64" />
+        <small class="field-note">6 or more, with a number</small>
+      </div>
+      <input class="field" id="rs-pass2" type="password" aria-label="Re-enter password" placeholder="Re-enter password" autocomplete="new-password" maxlength="64" />
+      <p class="form-error" id="rs-error" role="alert"></p>
+      <button class="btn" type="submit">Save password</button>
+      <button class="link" type="button" data-go="admin-login">Back to log in</button>
+    </form>
+  </section>
+
+  <!-- ================= ADMIN CONTROL ================= -->
+  <section class="screen" id="scr-admin-control" data-decor="admin" hidden>
+    <img class="logo" src="assets/ui/logo.png" alt="Prime Time" />
+    <form class="sheet sheet-admin" id="form-control" novalidate>
+      <button class="back" type="button" id="ac-back" aria-label="Back to the waiting room" hidden></button>
+      <h1 class="title" id="ac-title">Admin Control</h1>
+      <label class="field select school-only"><span class="sr">Number of players</span>
+        <select id="ac-players" required>
+          <option value="" disabled selected>Select number of players*</option>
+          <option value="2">2 players</option><option value="3">3 players</option><option value="4">4 players</option>
+          <option value="5">5 players</option><option value="6">6 players</option>
+        </select>
+      </label>
+      <label class="field select school-only"><span class="sr">Grade of players</span>
+        <select id="ac-grade" required>
+          <option value="" disabled selected>Select grade of players*</option>
+        </select>
+      </label>
+      <div class="field toggle-row"><span id="lbl-hints">Hint mode</span><button type="button" class="toggle" id="ac-hints" role="switch" aria-checked="false" aria-labelledby="lbl-hints"><b></b></button></div>
+      <div class="field toggle-row"><span id="lbl-timer">Timer mode</span><button type="button" class="toggle" id="ac-timer" role="switch" aria-checked="false" aria-labelledby="lbl-timer"><b></b></button></div>
+      <label class="field select"><span class="sr">Timer limit</span>
+        <select id="ac-limit" disabled>
+          <option value="" disabled selected>Timer limit</option>
+          <option value="30">30 seconds per turn</option><option value="60">60 seconds per turn</option><option value="90">90 seconds per turn</option>
+        </select>
+      </label>
+      <label class="field select"><span class="sr">SKIP cards</span>
+        <select id="ac-skips">
+          <option value="4" selected>4 SKIP cards</option><option value="5">5 SKIP cards</option><option value="6">6 SKIP cards</option><option value="7">7 SKIP cards</option>
+          <option value="8">8 SKIP cards</option><option value="9">9 SKIP cards</option><option value="10">10 SKIP cards</option>
+        </select>
+      </label>
+      <label class="field select"><span class="sr">Games in the series</span>
+        <select id="ac-series">
+          <option value="1" selected>1 game (no series)</option><option value="2">Series of 2 games</option><option value="3">Series of 3 games</option>
+          <option value="4">Series of 4 games</option><option value="5">Series of 5 games</option><option value="6">Series of 6 games</option>
+          <option value="7">Series of 7 games</option><option value="8">Series of 8 games</option><option value="9">Series of 9 games</option>
+        </select>
+      </label>
+      <p class="form-error" id="ac-error" role="alert"></p>
+      <button class="btn" type="submit" id="ac-submit">Create game</button>
+      <div class="link-row">
+        <span class="who" id="ac-who"></span>
+        <button class="link" type="button" id="btn-logout">Log out</button>
+      </div>
+    </form>
+  </section>
+
+  <!-- ================= WAITING ROOM (admin and players) ================= -->
+  <section class="screen" id="scr-waiting" data-decor="admin" hidden>
+    <img class="logo" src="assets/ui/logo.png" alt="Prime Time" />
+    <div class="code-row"><span>Game Code</span><div class="code-boxes" id="wait-code"></div></div>
+    <p class="code-hint" id="wait-hint"></p>
+    <div class="sheet sheet-results">
+      <button class="chat-btn corner" data-open-chat aria-label="Chat"><i class="chat-badge" hidden></i></button>
+      <div class="banner" id="wait-title">Waiting for players</div>
+      <p class="sheet-sub" id="wait-sub"></p>
+      <p class="join-clock" id="join-clock" hidden></p>
+      <div class="pill-grid" id="wait-players"></div>
+      <p class="form-error" id="wait-error" role="alert"></p>
+      <div class="wait-actions" id="wait-actions"></div>
+    </div>
+  </section>
+
+  <!-- ================= GAME ================= -->
+  <section class="screen game" id="scr-game" data-decor="game" hidden>
+    <div class="board-wrap" id="board-wrap">
+      <div class="board" id="board" role="group" aria-label="Board"></div>
+      <!-- small screens: a bigger copy of the board to move around in (tap the board to open it) -->
+      <div class="board-zoom" id="board-zoom" hidden aria-hidden="true">
+        <div class="board-zoom-scroll" id="board-zoom-scroll"><div class="zb"><div class="board" id="board-zoom-slots"></div></div></div>
+        <span class="board-zoom-hint">Tap to zoom out</span>
+      </div>
+    </div>
+    <div class="game-lower">
+      <div class="tray-row">
+        <div class="tray-left"><span class="series-tag" id="series-tag" hidden></span></div>
+        <div class="tray-main">
+          <span class="tray-box" id="tray-count">0</span>
+          <span class="tray-text">Cards Remaining in the box</span>
+        </div>
+        <div class="tools">
+          <button class="tool" id="btn-sound" aria-label="Sound" aria-pressed="true"></button>
+          <button class="tool chat-btn" data-open-chat aria-label="Chat and moves"><i class="chat-badge" hidden></i></button>
+          <button class="tool" data-open-rules aria-label="How to play">?</button>
+        </div>
+      </div>
+      <!-- .side has no box in portrait; in landscape it is the right-hand column -->
+      <div class="side">
+        <div class="opponents" id="opponents"></div>
+        <!-- players: their hand; admin: an overview of the table -->
+        <div class="hand-panel" id="hand-panel">
+          <button class="arrow left" id="hand-left" aria-label="Scroll cards left"></button>
+          <div class="hand-track" id="hand"></div>
+          <button class="arrow right" id="hand-right" aria-label="Scroll cards right"></button>
+        </div>
+        <div class="admin-panel" id="admin-panel" hidden></div>
+        <div class="you-row"><span id="you-label">You</span></div>
+        <div class="play-row">
+          <button class="btn play" id="btn-play" disabled>Play</button>
+          <button class="btn pass" id="btn-pass" hidden>Pass</button>
+          <button class="btn play" id="btn-show-results" hidden>Show results</button>
+        </div>
+      </div>
+      <div class="status-slot"><p class="status" id="status" aria-live="polite"></p></div>
+    </div>
+  </section>
+
+  <!-- ================= RESULTS ================= -->
+  <section class="screen" id="scr-results" data-decor="admin" hidden>
+    <img class="logo" src="assets/ui/logo.png" alt="Prime Time" />
+    <div class="code-row"><span>Game Code</span><div class="code-boxes" id="res-code"></div></div>
+    <div class="sheet sheet-results">
+      <button class="chat-btn corner" data-open-chat aria-label="Chat and moves"><i class="chat-badge" hidden></i></button>
+      <div class="banner" id="res-title"></div>
+      <p class="sheet-sub" id="res-sub"></p>
+      <div class="pill-grid" id="res-players"></div>
+      <div class="res-actions" id="res-actions"></div>
+      <div class="link-row center">
+        <button class="link" id="btn-res-toggle" hidden></button>
+        <button class="link" id="btn-view-board">View the final board</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= POP-UPS ================= -->
+  <div class="overlay" id="toss-overlay" hidden>
+    <div class="modal toss" role="dialog" aria-modal="true" aria-labelledby="toss-title" tabindex="-1">
+      <h2 class="title" id="toss-title">The Toss</h2>
+      <p class="modal-sub" id="toss-sub">Everyone draws a card. The smallest number goes first!</p>
+      <div class="toss-grid" id="toss-grid"></div>
+      <p class="toss-result" id="toss-result"></p>
+    </div>
+  </div>
+
+  <div class="overlay" id="skip-overlay" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="skip-title">
+      <h2 class="title" id="skip-title">Play SKIP on…</h2>
+      <p class="modal-sub">Pick the player who will miss their next turn.</p>
+      <div class="skip-targets" id="skip-targets"></div>
+      <button class="link" id="btn-skip-cancel">Cancel</button>
+    </div>
+  </div>
+
+  <div class="overlay" id="nope-overlay" hidden>
+    <div class="modal nope" role="alertdialog" aria-modal="true" aria-labelledby="nope-title" aria-describedby="nope-msg">
+      <div class="nope-card" id="nope-card"></div>
+      <h2 class="title" id="nope-title">Oops!</h2>
+      <p class="modal-sub" id="nope-msg"></p>
+      <button class="btn" id="btn-nope-ok">OK</button>
+    </div>
+  </div>
+
+  <div class="overlay" id="confirm-overlay" hidden>
+    <div class="modal" role="alertdialog" aria-modal="true" aria-labelledby="confirm-title" aria-describedby="confirm-msg">
+      <h2 class="title" id="confirm-title"></h2>
+      <p class="modal-sub" id="confirm-msg"></p>
+      <button class="btn" id="btn-confirm-yes">Yes</button>
+      <button class="link" id="btn-confirm-no">Cancel</button>
+    </div>
+  </div>
+
+  <!-- the teacher decides when the join time ends with too few players -->
+  <div class="overlay" id="timeup-overlay" hidden>
+    <div class="modal" role="alertdialog" aria-modal="true" aria-labelledby="timeup-title" aria-describedby="timeup-msg">
+      <h2 class="title" id="timeup-title">Time is up</h2>
+      <p class="modal-sub" id="timeup-msg"></p>
+      <button class="btn" id="btn-timeup-more">Add 1 more minute</button>
+      <button class="btn secondary" id="btn-timeup-start" hidden></button>
+      <button class="link" id="btn-timeup-wait">Keep waiting</button>
+    </div>
+  </div>
+
+  <!-- chat, and the list of moves in this game -->
+  <div class="overlay" id="chat-overlay" hidden>
+    <div class="modal chat" role="dialog" aria-modal="true" aria-labelledby="chat-title">
+      <button class="close" data-close aria-label="Close">×</button>
+      <h2 class="sr" id="chat-title">Chat and moves</h2>
+      <div class="tabs" role="tablist">
+        <button role="tab" id="tab-chat" aria-selected="true" aria-controls="pane-chat" data-tab="chat">Chat</button>
+        <button role="tab" id="tab-log" aria-selected="false" aria-controls="pane-log" data-tab="log">Moves</button>
+      </div>
+      <div class="pane" id="pane-chat" role="tabpanel" aria-labelledby="tab-chat">
+        <ol class="msgs" id="chat-list"></ol>
+        <form class="chat-form" id="chat-form" autocomplete="off">
+          <input class="field" id="chat-input" maxlength="200" aria-label="Message" placeholder="Type a message" />
+          <button class="btn" type="submit">Send</button>
+        </form>
+      </div>
+      <div class="pane" id="pane-log" role="tabpanel" aria-labelledby="tab-log" hidden>
+        <ol class="msgs log" id="log-list"></ol>
+      </div>
+    </div>
+  </div>
+
+  <div class="overlay" id="pause-overlay" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="pause-title" tabindex="-1">
+      <h2 class="title" id="pause-title">Paused</h2>
+      <p class="modal-sub">Your teacher paused the game.</p>
+    </div>
+  </div>
+
+  <div class="overlay" id="rules-overlay" hidden>
+    <div class="modal rules" role="dialog" aria-modal="true" aria-labelledby="rules-title">
+      <button class="close" data-close aria-label="Close">×</button>
+      <h2 class="title" id="rules-title">How to play</h2>
+      <ol>
+        <li><b>Who starts?</b> Everyone gets a card. The smallest number starts and gets the <b>1</b> card.</li>
+        <li><b>First move.</b> Put the <b>1</b> on the board.</li>
+        <li><b>Your turn.</b> Play one card. To play a card, tap it twice. If a card fits, you must play it. If nothing fits, tap Pass.
+          <ul>
+            <li>A <b>prime</b> number fits any time its slot is free.</li>
+            <li>Other numbers need their prime factors on the board first. 12 needs 2, 2 and 3.
+              <span class="eg" aria-hidden="true"><img src="assets/cards/12.png" alt="" /><i>=</i><img src="assets/cards/2.png" alt="" /><i>×</i><img src="assets/cards/2.png" alt="" /><i>×</i><img src="assets/cards/3.png" alt="" /></span></li>
+            <li class="pic"><img src="assets/cards/magic.png" alt="" /><span><b>MAGIC</b> is any prime. Put it on an empty prime slot. When all prime slots are full, it can go on top of a card.</span></li>
+            <li class="pic"><img src="assets/cards/skip.png" alt="" /><span><b>SKIP</b>: the player you pick misses a turn. They still take a card.</span></li>
+          </ul>
+        </li>
+        <li><b>Always take a card</b> from the box after your turn.</li>
+        <li><b>Your cards</b> stay in the order you got them. Hold a card and drag it to move it.</li>
+        <li><b>Winning.</b> When the box is empty, the first player with no cards wins.</li>
+        <li><b>Scores.</b> Everyone else adds up their cards. MAGIC and SKIP are 0. The lowest score is best.</li>
+        <li><b>Small screen?</b> Tap the board to see it bigger. Tap again to go back.</li>
+      </ol>
+      <button class="btn" id="btn-rules-ok" data-close>Got it</button>
+    </div>
+  </div>
+
+  <div class="toasts" id="toasts" aria-live="polite"></div>
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="rules.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
